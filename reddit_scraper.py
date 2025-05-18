@@ -22,6 +22,9 @@ import logging
 import argparse
 from datetime import datetime
 import praw
+from config import (
+    DATA_PROCESSED
+)
 
 # ————— Configuração de logging —————
 logging.basicConfig(
@@ -112,7 +115,7 @@ def parse_args():
         help="Número máximo de comentários por post"
     )
     parser.add_argument(
-        "--output", default="comments.csv",
+        "--output", default= DATA_PROCESSED + "/comments.csv",
         help="Arquivo CSV de saída"
     )
     return parser.parse_args()
