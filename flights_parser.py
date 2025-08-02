@@ -1,9 +1,7 @@
 import csv
 from pathlib import Path
-from config import (
-    DATA_RAW,
-    DATA_PROCESSED
-)
+from config import DATA_RAW, DATA_PROCESSED
+
 
 def process_file(file_path, output_dir, max_lines=None):
     filename = Path(file_path).name
@@ -14,10 +12,21 @@ def process_file(file_path, output_dir, max_lines=None):
     written = 0
 
     header = [
-        "TicketID", "UniqueCarrier", "YearQuarter", "CouponNum", "SequenceNum",
-        "Origin", "OriginWAC", "Roundtrip", "FareClass",
-        "SegmentNum", "MarketingCarrier", "OperatingCarrier",
-        "Distance", "ArrivalAirport", "FareAmount"
+        "TicketID",
+        "UniqueCarrier",
+        "YearQuarter",
+        "CouponNum",
+        "SequenceNum",
+        "Origin",
+        "OriginWAC",
+        "Roundtrip",
+        "FareClass",
+        "SegmentNum",
+        "MarketingCarrier",
+        "OperatingCarrier",
+        "Distance",
+        "ArrivalAirport",
+        "FareAmount",
     ]
 
     with open(file_path, "r") as infile, open(output_path, "w", newline="") as outfile:
@@ -33,15 +42,15 @@ def process_file(file_path, output_dir, max_lines=None):
                 continue
 
             # Itinerary-level fields
-            ticket_id      = parts[0]
+            ticket_id = parts[0]
             unique_carrier = parts[1]
-            yq             = parts[2]
-            coupon_num     = parts[3]
-            sequence_num   = parts[4]
-            origin         = parts[5]
-            origin_wac     = parts[7]
-            roundtrip      = parts[8]
-            fare_class     = parts[9]
+            yq = parts[2]
+            coupon_num = parts[3]
+            sequence_num = parts[4]
+            origin = parts[5]
+            origin_wac = parts[7]
+            roundtrip = parts[8]
+            fare_class = parts[9]
 
             if yq[:4] != yearquarter[:4]:
                 continue
@@ -50,7 +59,7 @@ def process_file(file_path, output_dir, max_lines=None):
             segment_start = 10
             segment_num = 1
             while segment_start + 10 < len(parts):
-                seg = parts[segment_start:segment_start + 11]
+                seg = parts[segment_start : segment_start + 11]
                 if len(seg) < 11:
                     break
 
@@ -66,12 +75,25 @@ def process_file(file_path, output_dir, max_lines=None):
                 except ValueError:
                     distance = fare = None
 
-                writer.writerow([
-                    ticket_id, unique_carrier, yq, coupon_num, sequence_num,
-                    origin, origin_wac, roundtrip, fare_class,
-                    segment_num, seg[0], seg[2],
-                    distance, arrival_airport, fare
-                ])
+                writer.writerow(
+                    [
+                        ticket_id,
+                        unique_carrier,
+                        yq,
+                        coupon_num,
+                        sequence_num,
+                        origin,
+                        origin_wac,
+                        roundtrip,
+                        fare_class,
+                        segment_num,
+                        seg[0],
+                        seg[2],
+                        distance,
+                        arrival_airport,
+                        fare,
+                    ]
+                )
                 written += 1
                 segment_start += 11
                 segment_num += 1
