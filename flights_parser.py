@@ -112,6 +112,8 @@ def process_all_files(folder_path=DATA_RAW, max_lines=None):
         print(f"🔍 Processing: {file.name}")
         process_file(file, output_dir, max_lines=max_lines)
 
+def main():
+    process_all_files(".", max_lines=100000)  # or max_lines=100000 for testing
 
 if __name__ == "__main__":
-    process_all_files(".", max_lines=None)  # or max_lines=100000 for testing
+    main()

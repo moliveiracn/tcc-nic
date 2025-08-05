@@ -121,7 +121,7 @@ def parse_args():
     )
     parser.add_argument(
         "--output",
-        default=DATA_PROCESSED + "/comments.csv",
+        default=DATA_PROCESSED / "comments.csv",
         help="Arquivo CSV de saída",
     )
     return parser.parse_args()

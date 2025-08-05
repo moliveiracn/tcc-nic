@@ -3,7 +3,7 @@ import base64
 import os
 import pandas as pd
 from bs4 import BeautifulSoup
-
+from config import DATA_RAW, DATA_PROCESSED
 
 # ========== Spotify API ==========
 def init_spotify_client():
@@ -216,44 +216,47 @@ def buscar_certificacoes_riaa(artista_nome):
 
 
 # ========== Execução Principal ==========
-artistas = ["BTS", "BLACKPINK", "Lady Gaga"]
-access_token = init_spotify_client()
-dados_artistas = []
+def main():
+    artistas = ["BTS", "BLACKPINK", "Lady Gaga"]
+    access_token = init_spotify_client()
+    dados_artistas = []
 
-for nome in artistas:
-    try:
-        artista = buscar_artista(nome, access_token)
-        top_musicas = buscar_top_musicas(artista["id"], access_token)
-        lastfm_info = buscar_dados_lastfm(artista["name"])
-        kworb_info = buscar_kworb_streams(artista["id"])
-        riaa_info = buscar_certificacoes_riaa(artista["name"])
+    for nome in artistas:
+        try:
+            artista = buscar_artista(nome, access_token)
+            top_musicas = buscar_top_musicas(artista["id"], access_token)
+            lastfm_info = buscar_dados_lastfm(artista["name"])
+            kworb_info = buscar_kworb_streams(artista["id"])
+            riaa_info = buscar_certificacoes_riaa(artista["name"])
 
-        dados = {
-            "nome": artista["name"],
-            "popularidade_spotify": artista["popularity"],
-            "seguidores_spotify": artista["followers"]["total"],
-            "generos": ", ".join(artista["genres"]),
-            "top_musicas": ", ".join([m["name"] for m in top_musicas]),
-            "ouvintes_lastfm": lastfm_info["ouvintes_lastfm"],
-            "playcount_lastfm": lastfm_info["playcount_lastfm"],
-            "kworb_total_streams": (
-                kworb_info["kworb_total_streams"] if kworb_info else None
-            ),
-            "riaa_vendas_estimadas": (
-                riaa_info["riaa_vendas_estimadas"] if riaa_info else None
-            ),
-            "riaa_maior_certificacao": (
-                riaa_info["riaa_maior_certificacao"] if riaa_info else None
-            ),
-            "riaa_certificacoes": (
-                riaa_info["riaa_certificacoes"] if riaa_info else None
-            ),
-        }
-        dados_artistas.append(dados)
+            dados = {
+                "nome": artista["name"],
+                "popularidade_spotify": artista["popularity"],
+                "seguidores_spotify": artista["followers"]["total"],
+                "generos": ", ".join(artista["genres"]),
+                "top_musicas": ", ".join([m["name"] for m in top_musicas]),
+                "ouvintes_lastfm": lastfm_info["ouvintes_lastfm"],
+                "playcount_lastfm": lastfm_info["playcount_lastfm"],
+                "kworb_total_streams": (
+                    kworb_info["kworb_total_streams"] if kworb_info else None
+                ),
+                "riaa_vendas_estimadas": (
+                    riaa_info["riaa_vendas_estimadas"] if riaa_info else None
+                ),
+                "riaa_maior_certificacao": (
+                    riaa_info["riaa_maior_certificacao"] if riaa_info else None
+                ),
+                "riaa_certificacoes": (
+                    riaa_info["riaa_certificacoes"] if riaa_info else None
+                ),
+            }
+            dados_artistas.append(dados)
+        except Exception as e:
+            print(f"Erro com artista {nome}: {e}")
 
-    except Exception as e:
-        print(f"Erro com artista {nome}: {e}")
+    df = pd.DataFrame(dados_artistas)
+    csv_path = DATA_PROCESSED / "dados_artistas.csv"
+    df.to_csv(csv_path, index=False, sep=";")
 
-df = pd.DataFrame(dados_artistas)
-csv_path = "dados_artistas.csv"
-df.to_csv(csv_path, index=False, sep=";")
+if __name__ == "__main__":
+    main()

@@ -1,219 +1,128 @@
-# -*- coding: utf-8 -*-
-
 """
-Este script analisa os dados mensais de turismo em Las Vegas durante o ano de 2022,
-com foco em identificar o impacto dos shows do BTS realizados em abril.
-Ele gera graficos sobre:
-- Volume de visitantes
-- Ocupacao hoteleira total e nos finais de semana
-- ADR (Average Daily Room Rate - diaria media de hoteis)
-E calcula variacoes percentuais para apoiar a analise economica.
+analyze_excel.py (Refatorado)
 
-Esta versão foi refatorada para maior modularidade e reutilização.
-Novas features:
-- Gráfico combinado com duplo eixo Y para correlação de métricas.
-- Análise quantitativa do impacto do evento em comparação com a média.
+Este script analisa os dados de turismo em Las Vegas, já pré-processados,
+para identificar o impacto dos shows do BTS em abril de 2022.
+
+O fluxo de trabalho é:
+1. Carregar o arquivo CSV consolidado de 'data/processed'.
+2. Gerar gráficos comparativos que mostram a evolução das métricas ao
+   longo dos anos, permitindo uma análise visual do impacto do evento
+   em relação a outros períodos.
+3. Calcular e exibir estatísticas comparativas.
+
+A refatoração tornou este script focado apenas na análise e visualização,
+removendo a complexidade do tratamento de dados brutos.
 """
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from pandas.tseries.offsets import MonthEnd
-from config import DATA_RAW, DATA_PROCESSED, GRAPH_OUTPUT
+from config import DATA_PROCESSED, GRAPH_OUTPUT
 
-# =========================================================
-# CONFIGURACOES GERAIS
-# =========================================================
-# --- Arquivo e Aba ---
-ARQUIVO_EXCEL = DATA_RAW / "Year_to_Date_Summary_for_2022.xlsx"
-ABA_EXCEL = "Las Vegas 2022"
+# --- Constantes de Análise ---
+PROCESSED_DATA_FILE = DATA_PROCESSED / "vegas_tourism_yearly.csv"
+EVENT_NAME = "Shows BTS"
+EVENT_YEAR = 2022
+EVENT_MONTH = 4
 
-# --- Detalhes do Evento para Destaque ---
-EVENTO_NOME = "Shows BTS"
-EVENTO_INI = "2022-04-01"
-EVENTO_FIM = "2022-04-30"
-
-# --- Mapeamento do Excel (linhas e colunas) ---
-LINHA_DATAS = 6
-COLUNAS_DATAS = list(range(1, 25, 2))
-LINHA_INICIO_METRICAS = 7
-LINHA_FIM_METRICAS = 16
-COLUNA_NOMES_METRICAS = 0
-
-
-def carregar_dados_brutos(caminho_arquivo, aba):
-    """Carrega uma aba específica de um arquivo Excel sem cabeçalhos."""
+def load_data() -> pd.DataFrame:
+    """Carrega os dados processados e prepara o índice."""
     try:
-        xlsx = pd.ExcelFile(caminho_arquivo)
-        return xlsx.parse(aba, header=None)
+        df = pd.read_csv(PROCESSED_DATA_FILE, parse_dates=['Date'], index_col='Date')
+        return df
     except FileNotFoundError:
-        print(f"Erro: O arquivo {caminho_arquivo} não foi encontrado.")
+        print(f"Erro: Arquivo de dados processado não encontrado em {PROCESSED_DATA_FILE}")
+        print("Por favor, execute o script 'preprocess_vegas_data.py' primeiro.")
         return None
 
+def plot_yearly_comparison(df: pd.DataFrame, metric: str, title: str, ylabel: str):
+    """
+    Gera um gráfico de linha comparando uma métrica ao longo dos meses
+    para cada ano disponível nos dados.
+    """
+    plt.figure(figsize=(14, 8))
+    
+    # Usa pivot para ter anos como colunas e meses como linhas
+    df_pivot = df.pivot_table(index=df.index.month, columns=df.index.year, values=metric)
+    
+    sns.lineplot(data=df_pivot, markers=True, dashes=False)
 
-def limpar_e_estruturar_dados(df):
-    """Extrai, limpa e estrutura os dados de turismo do DataFrame bruto."""
-    if df is None:
-        return None
-
-    # Extrai as datas e as converte para o final do mês
-    linhas_datas = df.iloc[LINHA_DATAS, COLUNAS_DATAS]
-    datas_formatadas = pd.to_datetime(linhas_datas.values) + MonthEnd(0)
-
-    # Extrai os nomes das métricas
-    nomes_metricas = (
-        df.iloc[LINHA_INICIO_METRICAS:LINHA_FIM_METRICAS, COLUNA_NOMES_METRICAS]
-        .str.strip()
-        .tolist()
-    )
-
-    # Cria o DataFrame final e o preenche
-    dados_limpos = pd.DataFrame(index=datas_formatadas, columns=nomes_metricas)
-    for col_idx, data in zip(COLUNAS_DATAS, dados_limpos.index):
-        valores = df.iloc[LINHA_INICIO_METRICAS:LINHA_FIM_METRICAS, col_idx].values
-        dados_limpos.loc[data] = pd.to_numeric(valores, errors="coerce")
-
-    return dados_limpos.astype(float)
-
-
-def gerar_grafico(dados, metrica, titulo, ylabel, cor, caminho_salvar):
-    """Gera e salva um gráfico de linha para uma métrica específica."""
-    plt.figure(figsize=(12, 7))
-    sns.lineplot(data=dados[metrica], marker="o", color=cor, label=metrica)
-
-    # Destaca o período do evento no gráfico
-    plt.axvspan(
-        pd.to_datetime(EVENTO_INI),
-        pd.to_datetime(EVENTO_FIM),
-        color="orange",
-        alpha=0.2,
-        label=EVENTO_NOME,
-    )
-
-    plt.title(titulo, fontsize=16)
+    # Destaque para o ponto do evento (Abril de 2022)
+    event_value = df_pivot.loc[EVENT_MONTH, EVENT_YEAR]
+    plt.scatter(EVENT_MONTH, event_value, color='red', s=150, zorder=5, label=f"{EVENT_NAME} ({EVENT_YEAR})")
+    
+    plt.title(title, fontsize=16)
     plt.ylabel(ylabel)
     plt.xlabel("Mês")
-    plt.legend()
-    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+    plt.xticks(ticks=range(1, 13), labels=['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'])
+    plt.legend(title="Ano")
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
     plt.tight_layout()
-    plt.savefig(caminho_salvar)
-    plt.close()  # Libera memória
-
-
-def gerar_grafico_combinado_com_eixo_duplo(
-    dados, metrica1, metrica2, titulo, ylabel1, ylabel2, cor1, cor2, caminho_salvar
-):
-    """Gera um gráfico com duas métricas e dois eixos Y."""
-    fig, ax1 = plt.subplots(figsize=(12, 7))
-
-    # Eixo primário (Y1)
-    ax1.set_xlabel("Mês")
-    ax1.set_ylabel(ylabel1, color=cor1)
-    sns.lineplot(data=dados[metrica1], marker="o", color=cor1, ax=ax1, label=metrica1)
-    ax1.tick_params(axis="y", labelcolor=cor1)
-
-    # Eixo secundário (Y2)
-    ax2 = ax1.twinx()
-    ax2.set_ylabel(ylabel2, color=cor2)
-    sns.lineplot(data=dados[metrica2], marker="s", color=cor2, ax=ax2, label=metrica2)
-    ax2.tick_params(axis="y", labelcolor=cor2)
-
-    # Destaque do evento
-    ax1.axvspan(
-        pd.to_datetime(EVENTO_INI),
-        pd.to_datetime(EVENTO_FIM),
-        color="orange",
-        alpha=0.2,
-        label=EVENTO_NOME,
-    )
-
-    plt.title(titulo, fontsize=16)
-    fig.tight_layout()
-    fig.legend(loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes)
-    plt.savefig(caminho_salvar)
+    
+    filename = GRAPH_OUTPUT / f"comparison_{metric.replace(' ', '_').lower()}.png"
+    plt.savefig(filename)
     plt.close()
+    print(f"Gráfico salvo em: {filename}")
 
+def comparative_analysis(df: pd.DataFrame):
+    """Imprime uma análise comparativa do mês do evento."""
+    print("\n" + "="*60)
+    print(f"🔎 Análise de Impacto Quantitativo: {EVENT_NAME} (Abril de {EVENT_YEAR})")
+    print("="*60)
 
-def calcular_e_salvar_variacoes(dados, caminho_salvar):
-    """Calcula a variação percentual mês a mês e salva em CSV."""
-    variacoes = pd.DataFrame(
-        {
-            "Visitantes": dados["Visitor Volume"].pct_change() * 100,
-            "Ocupacao Total": dados["Total Occupancy"].pct_change() * 100,
-            "ADR": dados["Average Daily Room Rate (ADR)"].pct_change() * 100,
-        }
-    ).round(2)
+    # Filtra dados do evento
+    event_data = df[(df.index.year == EVENT_YEAR) & (df.index.month == EVENT_MONTH)]
+    
+    # Filtra dados para o mesmo mês em outros anos
+    april_other_years = df[(df.index.month == EVENT_MONTH) & (df.index.year != EVENT_YEAR)]
 
-    variacoes.to_csv(caminho_salvar)
-    print(f"Variações percentuais salvas em: {caminho_salvar}")
+    for metric in ["Visitor Volume", "Total Occupancy", "Average Daily Room Rate (ADR)"]:
+        if metric not in df.columns: continue
 
+        event_value = event_data[metric].iloc[0]
+        avg_april_others = april_other_years[metric].mean()
+        
+        diff_vs_other_aprils = ((event_value - avg_april_others) / avg_april_others) * 100
 
-def analise_comparativa_evento(dados):
-    """Imprime uma análise comparativa do mês do evento com a média dos outros meses."""
-    mes_evento = pd.to_datetime(EVENTO_INI).month
-    dados_evento = dados[dados.index.month == mes_evento]
-    dados_outros_meses = dados[dados.index.month != mes_evento]
-
-    media_outros_meses = dados_outros_meses.mean()
-
-    print("\n" + "=" * 50)
-    print(f"🔎 Análise de Impacto Quantitativo: {EVENTO_NOME}")
-    print("=" * 50)
-
-    for metrica in [
-        "Visitor Volume",
-        "Total Occupancy",
-        "Average Daily Room Rate (ADR)",
-    ]:
-        valor_evento = dados_evento[metrica].iloc[0]
-        media_geral = media_outros_meses[metrica]
-        diferenca_percentual = ((valor_evento - media_geral) / media_geral) * 100
-
-        print(f"\n--- {metrica} ---")
-        print(f"  - Mês do Evento: {valor_evento:,.0f}")
-        print(f"  - Média dos Outros Meses: {media_geral:,.0f}")
-        print(f"  - Impacto Percentual: {diferenca_percentual:+.2f}%")
-    print("=" * 50 + "\n")
-
+        print(f"\n--- {metric} ---")
+        print(f"  - Valor em Abr/2022: {event_value:,.2f}")
+        print(f"  - Média de Abril (outros anos): {avg_april_others:,.2f}")
+        print(f"  - Impacto vs. outros Abrils: {diff_vs_other_aprils:+.2f}%")
+    print("="*60 + "\n")
 
 def main():
-    """Orquestra a execução do script: carregar, analisar, plotar e salvar."""
-    sns.set(style="whitegrid")
-
-    # Etapa 1: Carregar e processar os dados
-    df_bruto = carregar_dados_brutos(ARQUIVO_EXCEL, ABA_EXCEL)
-    dados = limpar_e_estruturar_dados(df_bruto)
-
-    if dados is None:
-        print("Análise interrompida devido a erro no carregamento dos dados.")
+    """Orquestra a análise e geração de gráficos."""
+    sns.set(style="whitegrid", palette="viridis")
+    
+    df = load_data()
+    if df is None:
         return
 
-    # Etapa 2: Gerar e salvar gráficos individuais
-    # ... (chamadas para gerar_grafico como antes) ...
-
-    # Etapa 3: Gerar o novo gráfico combinado
-    gerar_grafico_combinado_com_eixo_duplo(
-        dados=dados,
-        metrica1="Visitor Volume",
-        metrica2="Average Daily Room Rate (ADR)",
-        titulo="Correlação: Volume de Visitantes vs. Diária Média (ADR)",
-        ylabel1="Número de Visitantes",
-        ylabel2="Valor (USD)",
-        cor1="royalblue",
-        cor2="firebrick",
-        caminho_salvar=GRAPH_OUTPUT / "visitantes_vs_adr_2022.png",
+    # Gerar gráficos comparativos para as principais métricas
+    plot_yearly_comparison(
+        df,
+        metric="Visitor Volume",
+        title="Comparativo Anual do Volume de Visitantes em Las Vegas",
+        ylabel="Número de Visitantes"
     )
-    print(f"Gráfico de correlação salvo com sucesso em: {GRAPH_OUTPUT}")
+    plot_yearly_comparison(
+        df,
+        metric="Total Occupancy",
+        title="Comparativo Anual da Ocupação Hoteleira Total (%)",
+        ylabel="Ocupação (%)"
+    )
+    plot_yearly_comparison(
+        df,
+        metric="Average Daily Room Rate (ADR)",
+        title="Comparativo Anual da Diária Média (ADR)",
+        ylabel="Valor (USD)"
+    )
 
-    # Etapa 4: Calcular e salvar variações percentuais
-    caminho_csv = DATA_PROCESSED / "variacoes_percentuais.csv"
-    calcular_e_salvar_variacoes(dados, caminho_csv)
-
-    # Etapa 5: Exibir a nova análise quantitativa
-    analise_comparativa_evento(dados)
-
-    print("\nAnálise concluída com sucesso!")
-
+    # Realizar e imprimir a análise quantitativa
+    comparative_analysis(df)
+    
+    print("Análise concluída com sucesso!")
 
 if __name__ == "__main__":
     main()
