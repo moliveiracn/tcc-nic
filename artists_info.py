@@ -115,31 +115,6 @@ def buscar_wikipedia_sales(artista_nome):
         return None
 
 
-# ========== Kworb ==========
-def buscar_kworb_streams(spotify_id):
-    try:
-        url = f"https://kworb.net/spotify/artist/{spotify_id}.html"
-        response = requests.get(url)
-        if response.status_code != 200:
-            return None
-        soup = BeautifulSoup(response.text, "lxml")
-        tabela = soup.find("table", {"class": "sortable"})
-        total_streams = 0
-        if not tabela:
-            return None
-        for row in tabela.find_all("tr")[1:]:
-            cols = row.find_all("td")
-            if len(cols) >= 5:
-                try:
-                    streams = int(cols[4].text.replace(",", ""))
-                    total_streams += streams
-                except:
-                    continue
-        return {"kworb_total_streams": total_streams}
-    except Exception as e:
-        return None
-
-
 def buscar_certificacoes_riaa(artista_nome):
     """
     Scraping da RIAA para coletar certificações e estimar vendas totais.
