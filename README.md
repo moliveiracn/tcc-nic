@@ -21,7 +21,7 @@ tcc-nic-main/
 ├── data/
 │   ├── raw/                # Dados brutos (ex: Excel, CSVs, asc)
 │   └── processed/          # Dados limpos/tratados
-└── outputs/
+└── output/
     └── graphs/             # Gráficos gerados automaticamente
 ```
 
