@@ -48,9 +48,17 @@ def plot_yearly_comparison(df: pd.DataFrame, metric: str, title: str, ylabel: st
     
     sns.lineplot(data=df_pivot, markers=True, dashes=False)
 
-    # Destaque para o ponto do evento (Abril de 2022)
-    event_value = df_pivot.loc[EVENT_MONTH, EVENT_YEAR]
-    plt.scatter(EVENT_MONTH, event_value, color='red', s=150, zorder=5, label=f"{EVENT_NAME} ({EVENT_YEAR})")
+    # Destaque para o ponto do evento (Abril de 2022), se disponível
+    if EVENT_YEAR in df_pivot.columns and EVENT_MONTH in df_pivot.index:
+        event_value = df_pivot.loc[EVENT_MONTH, EVENT_YEAR]
+        plt.scatter(
+            EVENT_MONTH,
+            event_value,
+            color="red",
+            s=150,
+            zorder=5,
+            label=f"{EVENT_NAME} ({EVENT_YEAR})",
+        )
     
     plt.title(title, fontsize=16)
     plt.ylabel(ylabel)
@@ -73,16 +81,26 @@ def comparative_analysis(df: pd.DataFrame):
 
     # Filtra dados do evento
     event_data = df[(df.index.year == EVENT_YEAR) & (df.index.month == EVENT_MONTH)]
-    
+
     # Filtra dados para o mesmo mês em outros anos
     april_other_years = df[(df.index.month == EVENT_MONTH) & (df.index.year != EVENT_YEAR)]
 
+    if event_data.empty:
+        print(
+            f"Aviso: não há dados para {EVENT_MONTH:02d}/{EVENT_YEAR}. "
+            "Análise comparativa não realizada."
+        )
+        return
+
     for metric in ["Visitor Volume", "Total Occupancy", "Average Daily Room Rate (ADR)"]:
-        if metric not in df.columns: continue
+        if metric not in df.columns:
+            continue
 
         event_value = event_data[metric].iloc[0]
         avg_april_others = april_other_years[metric].mean()
-        
+        if pd.isna(event_value) or pd.isna(avg_april_others):
+            continue
+
         diff_vs_other_aprils = ((event_value - avg_april_others) / avg_april_others) * 100
 
         print(f"\n--- {metric} ---")
