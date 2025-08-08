@@ -19,6 +19,7 @@ facilitando a análise e a plotagem de gráficos comparativos.
 
 import pandas as pd
 from pathlib import Path
+import re
 from typing import Optional
 
 from config import DATA_RAW, DATA_PROCESSED
@@ -34,12 +35,11 @@ ABA_EXCEL = "Las Vegas " # Assumindo que o nome da aba é consistente
 
 def extract_year_from_filename(path: Path) -> Optional[int]:
     """Extrai o ano do nome do arquivo (ex: 'data_2022.xlsx' -> 2022)."""
-    try:
-        # Tenta encontrar 4 dígitos seguidos no nome do arquivo
-        return int(''.join(filter(str.isdigit, path.stem))[:4])
-    except (ValueError, IndexError):
-        print(f"Aviso: Não foi possível extrair o ano do arquivo {path.name}. Ignorando.")
-        return None
+    match = re.search(r"\b(19|20)\d{2}\b", path.stem)
+    if match:
+        return int(match.group())
+    print(f"Aviso: Não foi possível extrair o ano do arquivo {path.name}. Ignorando.")
+    return None
 
 def process_single_file(file_path: Path, year: int) -> Optional[pd.DataFrame]:
     """Carrega e processa um único arquivo Excel, retornando um DataFrame limpo."""
