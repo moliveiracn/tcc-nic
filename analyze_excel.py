@@ -15,6 +15,7 @@ A refatoração tornou este script focado apenas na análise e visualização,
 removendo a complexidade do tratamento de dados brutos.
 """
 
+import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -73,11 +74,11 @@ def plot_yearly_comparison(df: pd.DataFrame, metric: str, title: str, ylabel: st
     plt.close()
     print(f"Gráfico salvo em: {filename}")
 
-def comparative_analysis(df: pd.DataFrame):
+def comparative_analysis(df: pd.DataFrame, metrics: list[str]):
     """Imprime uma análise comparativa do mês do evento."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print(f"🔎 Análise de Impacto Quantitativo: {EVENT_NAME} (Abril de {EVENT_YEAR})")
-    print("="*60)
+    print("=" * 60)
 
     # Filtra dados do evento
     event_data = df[(df.index.year == EVENT_YEAR) & (df.index.month == EVENT_MONTH)]
@@ -92,7 +93,7 @@ def comparative_analysis(df: pd.DataFrame):
         )
         return
 
-    for metric in ["Visitor Volume", "Total Occupancy", "Average Daily Room Rate (ADR)"]:
+    for metric in metrics:
         if metric not in df.columns:
             continue
 
@@ -107,39 +108,46 @@ def comparative_analysis(df: pd.DataFrame):
         print(f"  - Valor em Abr/2022: {event_value:,.2f}")
         print(f"  - Média de Abril (outros anos): {avg_april_others:,.2f}")
         print(f"  - Impacto vs. outros Abrils: {diff_vs_other_aprils:+.2f}%")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 def main():
     """Orquestra a análise e geração de gráficos."""
+    parser = argparse.ArgumentParser(description="Analisa indicadores turísticos.")
+    parser.add_argument(
+        "--metrics",
+        nargs="*",
+        help="Lista de indicadores a analisar (padrão: todos)",
+    )
+    args = parser.parse_args()
+
     sns.set(style="whitegrid", palette="viridis")
-    
+
     df = load_data()
     if df is None:
         return
 
-    # Gerar gráficos comparativos para as principais métricas
-    plot_yearly_comparison(
-        df,
-        metric="Visitor Volume",
-        title="Comparativo Anual do Volume de Visitantes em Las Vegas",
-        ylabel="Número de Visitantes"
-    )
-    plot_yearly_comparison(
-        df,
-        metric="Total Occupancy",
-        title="Comparativo Anual da Ocupação Hoteleira Total (%)",
-        ylabel="Ocupação (%)"
-    )
-    plot_yearly_comparison(
-        df,
-        metric="Average Daily Room Rate (ADR)",
-        title="Comparativo Anual da Diária Média (ADR)",
-        ylabel="Valor (USD)"
-    )
+    non_indicator_fields = {"Year", "Month"}
+    available_metrics = [col for col in df.columns if col not in non_indicator_fields]
+
+    if args.metrics:
+        metrics = [m for m in args.metrics if m in available_metrics]
+        missing = set(args.metrics) - set(metrics)
+        if missing:
+            print(f"Aviso: Indicadores não encontrados: {', '.join(missing)}")
+    else:
+        metrics = available_metrics
+
+    for metric in metrics:
+        plot_yearly_comparison(
+            df,
+            metric=metric,
+            title=f"Comparativo Anual de {metric}",
+            ylabel=metric,
+        )
 
     # Realizar e imprimir a análise quantitativa
-    comparative_analysis(df)
-    
+    comparative_analysis(df, metrics)
+
     print("Análise concluída com sucesso!")
 
 if __name__ == "__main__":
