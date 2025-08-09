@@ -62,6 +62,7 @@ def main():
     elif args.module == "excel":
         print("▶️ Executando o módulo 'analyze_excel'...")
         from analyze_excel import main as excel_main
+        sys.argv = [sys.argv[0]] + remaining_args # Passa os argumentos restantes para o scraper
         excel_main()
 
 if __name__ == "__main__":
