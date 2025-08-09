@@ -28,10 +28,46 @@ from config import DATA_RAW, DATA_PROCESSED
 # Assumimos que a estrutura é consistente entre os anos.
 LINHA_DATAS = 6
 COLUNAS_DATAS = list(range(1, 25, 2))
-LINHA_INICIO_METRICAS = 7
-LINHA_FIM_METRICAS = 16
 COLUNA_NOMES_METRICAS = 0
-ABA_EXCEL = "Las Vegas " # Assumindo que o nome da aba é consistente
+ABA_EXCEL = "Las Vegas "  # Assumindo que o nome da aba é consistente
+# Palavras que indicam o início de um rodapé e, portanto, o fim das métricas
+FOOTER_KEYWORDS = ["source", "nota", "notes"]
+
+
+def detect_metric_bounds(df: pd.DataFrame) -> tuple[int, int]:
+    """
+    Detecta as linhas de início e fim das métricas em um DataFrame bruto.
+
+    A busca começa logo após a linha de datas (`LINHA_DATAS`) e segue até
+    encontrar uma linha vazia ou um texto que indique rodapé (por exemplo,
+    "Source"). O índice final retornado é exclusivo, compatível com slicing
+    do pandas.
+    """
+
+    start_row = LINHA_DATAS + 1
+    # Avança até encontrar a primeira linha com valor na coluna de nomes
+    while start_row < len(df):
+        cell = df.iloc[start_row, COLUNA_NOMES_METRICAS]
+        if pd.isna(cell) or (isinstance(cell, str) and cell.strip() == ""):
+            start_row += 1
+            continue
+        break
+
+    end_row = start_row
+    while end_row < len(df):
+        cell = df.iloc[end_row, COLUNA_NOMES_METRICAS]
+
+        # Fim quando célula vazia ou linha toda vazia
+        if pd.isna(cell) or (isinstance(cell, str) and cell.strip() == "") or df.iloc[end_row].isna().all():
+            break
+
+        # Fim quando rodapé conhecido é encontrado
+        if isinstance(cell, str) and cell.strip().lower().startswith(tuple(FOOTER_KEYWORDS)):
+            break
+
+        end_row += 1
+
+    return start_row, end_row
 
 def extract_year_from_filename(path: Path) -> Optional[int]:
     """Extrai o ano do nome do arquivo (ex: 'data_2022.xlsx' -> 2022)."""
@@ -49,11 +85,15 @@ def process_single_file(file_path: Path, year: int) -> Optional[pd.DataFrame]:
         print(f"Erro ao ler o arquivo {file_path.name}: {e}")
         return None
 
+    # Detecta dinamicamente o intervalo das métricas
+    start_row, end_row = detect_metric_bounds(df_raw)
+    df_metrics = df_raw.iloc[start_row:end_row]
+
     # Extrai nomes das métricas e formata
-    metric_names = df_raw.iloc[LINHA_INICIO_METRICAS:LINHA_FIM_METRICAS, COLUNA_NOMES_METRICAS].str.strip().tolist()
+    metric_names = df_metrics.iloc[:, COLUNA_NOMES_METRICAS].astype(str).str.strip().tolist()
 
     # Extrai valores mensais
-    monthly_data = df_raw.iloc[LINHA_INICIO_METRICAS:LINHA_FIM_METRICAS, COLUNAS_DATAS].T
+    monthly_data = df_metrics.iloc[:, COLUNAS_DATAS].T
     monthly_data.columns = metric_names
     
     # Limpa e converte para numérico
