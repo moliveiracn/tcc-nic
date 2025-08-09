@@ -43,15 +43,19 @@ def detect_metric_bounds(df: pd.DataFrame) -> tuple[int, int]:
 
     start_row = LINHA_DATAS + 1
     # Avança até encontrar a primeira linha com valor na coluna de nomes
-    while start_row < len(df) and pd.isna(df.iloc[start_row, COLUNA_NOMES_METRICAS]):
-        start_row += 1
+    while start_row < len(df):
+        cell = df.iloc[start_row, COLUNA_NOMES_METRICAS]
+        if pd.isna(cell) or (isinstance(cell, str) and cell.strip() == ""):
+            start_row += 1
+            continue
+        break
 
     end_row = start_row
     while end_row < len(df):
         cell = df.iloc[end_row, COLUNA_NOMES_METRICAS]
 
         # Fim quando célula vazia ou linha toda vazia
-        if pd.isna(cell) or df.iloc[end_row].isna().all():
+        if pd.isna(cell) or (isinstance(cell, str) and cell.strip() == "") or df.iloc[end_row].isna().all():
             break
 
         # Fim quando rodapé conhecido é encontrado
