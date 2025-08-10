@@ -66,6 +66,36 @@ df = pd.read_csv(DATA_RAW / "exemplo.csv")
 df.plot().savefig(GRAPH_OUTPUT / "grafico1.png")
 ```
 
+### Executar módulos
+
+O script `run.py` orquestra os diferentes componentes do projeto. Use a opção
+`--module` para escolher qual parte executar:
+
+```bash
+# Coleta informações de artistas (Spotify/Last.fm)
+python run.py --module artists
+
+# Processa dados brutos de voos com destino a Las Vegas
+python run.py --module flights
+
+# Busca comentários no Reddit (aceita parâmetros extras)
+python run.py --module reddit --post-limit 50 --comment-limit 20 --output comments.csv
+
+# Padroniza dados de turismo antes da análise
+python run.py --module preprocess
+
+# Gera gráficos e estatísticas a partir dos dados processados
+python run.py --module excel --metrics "Visitors" "Average Room Rate"
+```
+
+Argumentos úteis:
+
+- `reddit`: `--post-limit` controla quantos posts buscar por par de termos, e
+  `--comment-limit` quantos comentários capturar por post (opcionalmente,
+  `--output` define o arquivo CSV de saída).
+- `excel`: `--metrics` recebe uma lista de indicadores específicos para analisar
+  (por padrão, todos são utilizados).
+
 ---
 
 ## 📊 Fontes de Dados
