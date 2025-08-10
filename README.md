@@ -28,8 +28,13 @@ tcc-nic-main/
 ---
 
 ## 🧰 Requisitos
-Instalar dependências:
+- Python 3.11 ou superior
+
+Crie e ative um ambiente virtual antes de instalar as dependências:
+
 ```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
 ```
 
