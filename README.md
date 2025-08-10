@@ -35,6 +35,27 @@ pip install -r requirements.txt
 
 ---
 
+## Variáveis de Ambiente
+
+Alguns scripts requerem credenciais fornecidas via variáveis de ambiente:
+
+- `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET` – acesso à API do Spotify
+- `LASTFM_API_KEY` – chave da API do Last.fm
+- `REDDIT_CID`, `REDDIT_CSECRET` e `REDDIT_USER_AGENT` – credenciais da API do Reddit
+
+Configure-as no terminal antes de executar os scripts:
+
+```bash
+export SPOTIFY_CLIENT_ID="..."
+export SPOTIFY_CLIENT_SECRET="..."
+export LASTFM_API_KEY="..."
+export REDDIT_CID="..."
+export REDDIT_CSECRET="..."
+export REDDIT_USER_AGENT="..."
+```
+
+---
+
 ## ⚙️ Uso
 
 Todos os scripts usam `config.py` para definir caminhos. Por exemplo:
