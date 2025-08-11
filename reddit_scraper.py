@@ -160,8 +160,19 @@ def main():
         "Beyonce",  # specific interest
         "Kpop",  # genre with a large female fanbase
     ]
-    male = []
-    # male   = ["woodworking", "fishing", "gaming"]
+    # Male-oriented hobbies/interests sourced from common "hobbies for men" lists
+    # (e.g., BetterUp, Men's Health) for broader coverage
+    male = [
+        "football",  # popular male sport
+        "weightlifting",  # fitness hobby frequently marketed to men
+        "car tuning",  # automotive pastime often associated with men
+        "woodworking",  # traditional DIY hobby for men
+        "fishing",  # outdoor activity with strong male participation
+        "gaming",  # surveys show a large male gaming demographic
+        "hunting",  # commonly cited male interest
+        "golf",  # recreational sport popular with men
+    ]
+
     demean = [
         "basic",
         "cringe",
@@ -206,6 +217,14 @@ def main():
         "soy",
         "simping",  # if the hobby involves devotion to a celebrity
         "delusional",  # for fans perceived as overly invested
+        # male-targeted insults from common online usage
+        "overdramatic",  # portrays men as excessively emotional
+        "irrational",  # questions men's logic/reasoning
+        "manchild",  # implies an immature adult male
+        "manbaby",  # variant of manchild
+        "beta",  # references pejorative alpha/beta hierarchy
+        "soyboy",  # online insult aimed at men
+        "neckbeard",  # stereotype mocking socially awkward men
     ]
     pairs = [(h, d) for h in (female + male) for d in demean]
 
