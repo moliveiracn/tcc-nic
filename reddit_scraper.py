@@ -79,7 +79,7 @@ def fetch_comments_for_pair(
                     "subreddit": str(sub.subreddit),
                     "author": str(c.author),
                     "score": c.score,
-                    "created_utc": datetime.fromtimestamp(c.created_utc),
+                    "created_utc": datetime.utcfromtimestamp(c.created_utc).isoformat(),
                     "body": c.body.replace("\n", " "),
                 }
                 rows.append(enrich_row(row))
