@@ -56,17 +56,15 @@ def process_file(file_path, output_dir, max_lines=None):
                 continue
 
             # Loop through all flight segments in the record
-            segment_start = 10
-            segment_num = 1
-            while segment_start + 10 < len(parts):
+            total_segments = (len(parts) - 10) // 11
+            for segment_num in range(1, total_segments + 1):
+                segment_start = 10 + (segment_num - 1) * 11
                 seg = parts[segment_start : segment_start + 11]
                 if len(seg) < 11:
-                    break
+                    continue
 
                 arrival_airport = seg[6]
-                if arrival_airport != "LAS":
-                    segment_start += 11
-                    segment_num += 1
+                if segment_num != total_segments or arrival_airport != "LAS":
                     continue
 
                 try:
@@ -95,8 +93,6 @@ def process_file(file_path, output_dir, max_lines=None):
                     ]
                 )
                 written += 1
-                segment_start += 11
-                segment_num += 1
 
     print(f"✅ {output_path.name}: {written} LAS-arrival segments exported.")
 
