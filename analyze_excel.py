@@ -16,6 +16,8 @@ removendo a complexidade do tratamento de dados brutos.
 """
 
 import argparse
+from typing import Optional
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -27,8 +29,11 @@ EVENT_NAME = "Shows BTS"
 EVENT_YEAR = 2022
 EVENT_MONTH = 4
 
-def load_data() -> pd.DataFrame:
-    """Carrega os dados processados e prepara o índice."""
+def load_data() -> Optional[pd.DataFrame]:
+    """Carrega os dados processados e prepara o índice.
+
+    Retorna ``None`` se o arquivo não for encontrado.
+    """
     try:
         df = pd.read_csv(PROCESSED_DATA_FILE, parse_dates=['Date'], index_col='Date')
         return df
@@ -114,8 +119,8 @@ def main(metrics=None):
     """Orquestra a análise e geração de gráficos."""
     sns.set(style="whitegrid", palette="viridis")
 
-    df = load_data()
-    if df is None:
+    df: Optional[pd.DataFrame] = load_data()
+    if not isinstance(df, pd.DataFrame):
         return
 
     non_indicator_fields = {"Year", "Month"}
