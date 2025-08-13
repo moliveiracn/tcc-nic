@@ -23,7 +23,12 @@ import logging
 import argparse
 from datetime import datetime
 import praw
-from config import DATA_PROCESSED
+from config import (
+    DATA_PROCESSED,
+    FEMALE_TERMS,
+    MALE_TERMS,
+    DEMEAN_TERMS,
+)
 
 # ————— Configuração de logging —————
 logging.basicConfig(
@@ -49,6 +54,13 @@ def enrich_row(row):
     return row
 
 
+# ————— Correspondência de termos —————
+def match_terms(text: str, hobby_pattern: str, insult_pattern: str) -> bool:
+    """Retorna True se texto contiver ambos os padrões."""
+    lowered = text.lower()
+    return re.search(hobby_pattern, lowered) and re.search(insult_pattern, lowered)
+
+
 # ————— Busca de comentários —————
 def fetch_comments_for_pair(
     reddit, hobby, insult, posts_limit=50, comments_limit=20, sort="hot"
@@ -59,9 +71,11 @@ def fetch_comments_for_pair(
     2) Itera comentários desses posts, filtrando aqueles que contenham ambos.
     """
     rows = []
+    hobby_query = re.sub(r"\W+", " ", hobby).strip()
+    insult_query = re.sub(r"\W+", " ", insult).strip()
     query = (
-        f'title:"{hobby}" AND title:"{insult}" '
-        f'OR selftext:"{hobby}" AND selftext:"{insult}"'
+        f'title:"{hobby_query}" AND title:"{insult_query}" '
+        f'OR selftext:"{hobby_query}" AND selftext:"{insult_query}"'
     )
     submissions = reddit.subreddit("all").search(
         query, limit=posts_limit, syntax="lucene"
@@ -70,8 +84,7 @@ def fetch_comments_for_pair(
         sub.comments.replace_more(limit=0)
         count = 0
         for c in sub.comments.list():
-            body_low = c.body.lower()
-            if hobby in body_low and insult in body_low:
+            if match_terms(c.body, hobby, insult):
                 row = {
                     "pair": f"{hobby}|{insult}",
                     "post_id": sub.id,
@@ -143,89 +156,9 @@ def main():
     reddit = init_reddit_client()
 
     # Listas fixas de hobbies e termos depreciativos
-    female = [
-        "Honkai Star Rail",
-        "Honkai: Star Rail",
-        "HSR",
-        "Infinity Nikki",
-        "Genshin",
-        "Genshin Impact",
-        "WuWa",
-        "Wuthering Waves",
-        "love and deepspace",
-        "Lady Gaga",  # specific interest
-        "BTS",  # specific interest
-        "Taylor Swift",  # specific interest
-        "Ariana Grande",  # specific interest
-        "Beyonce",  # specific interest
-        "Kpop",  # genre with a large female fanbase
-    ]
-    # Male-oriented hobbies/interests sourced from common "hobbies for men" lists
-    # (e.g., BetterUp, Men's Health) for broader coverage
-    male = [
-        "football",  # popular male sport
-        "weightlifting",  # fitness hobby frequently marketed to men
-        "car tuning",  # automotive pastime often associated with men
-        "woodworking",  # traditional DIY hobby for men
-        "fishing",  # outdoor activity with strong male participation
-        "gaming",  # surveys show a large male gaming demographic
-        "hunting",  # commonly cited male interest
-        "golf",  # recreational sport popular with men
-    ]
-
-    demean = [
-        "basic",
-        "cringe",
-        "cringey",
-        "silly",
-        "frivolous",
-        "superficial",
-        "vain",
-        "childish",
-        "immature",
-        "stupid",
-        "dumb",
-        "pointless",
-        "useless",
-        "waste of time",
-        "not a real hobby",
-        "trivial",
-        "obsessed",  # in a negative connotation
-        "fangirl",  # often used dismissively
-        "crazy",  # when referring to fans
-        "hysterical",
-        "overly emotional",
-        "dramatic",
-        "airhead",
-        "bimbo",
-        "ditzy",
-        "vapid",
-        "shallow",
-        "attention-seeking",
-        "for girls",
-        "that's for kids",
-        "get a real interest",
-        "unserious",
-        "fluffy",
-        "cute but dumb",
-        "just a phase",
-        "eye-roll",  # as an action/description
-        "lame",
-        "pathetic",
-        "try-hard",
-        "normie",  # can be used to mock mainstream feminine interests
-        "soy",
-        "simping",  # if the hobby involves devotion to a celebrity
-        "delusional",  # for fans perceived as overly invested
-        # male-targeted insults from common online usage
-        "overdramatic",  # portrays men as excessively emotional
-        "irrational",  # questions men's logic/reasoning
-        "manchild",  # implies an immature adult male
-        "manbaby",  # variant of manchild
-        "beta",  # references pejorative alpha/beta hierarchy
-        "soyboy",  # online insult aimed at men
-        "neckbeard",  # stereotype mocking socially awkward men
-    ]
+    female = FEMALE_TERMS
+    male = MALE_TERMS
+    demean = DEMEAN_TERMS
     pairs = [(h, d) for h in (female + male) for d in demean]
 
     # Campos do CSV (incluindo colunas adicionadas pelo enrich_row)
