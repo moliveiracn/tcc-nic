@@ -110,16 +110,8 @@ def comparative_analysis(df: pd.DataFrame, metrics: list[str]):
         print(f"  - Impacto vs. outros Abrils: {diff_vs_other_aprils:+.2f}%")
     print("=" * 60 + "\n")
 
-def main():
+def main(metrics=None):
     """Orquestra a análise e geração de gráficos."""
-    parser = argparse.ArgumentParser(description="Analisa indicadores turísticos.")
-    parser.add_argument(
-        "--metrics",
-        nargs="*",
-        help="Lista de indicadores a analisar (padrão: todos)",
-    )
-    args = parser.parse_args()
-
     sns.set(style="whitegrid", palette="viridis")
 
     df = load_data()
@@ -129,11 +121,12 @@ def main():
     non_indicator_fields = {"Year", "Month"}
     available_metrics = [col for col in df.columns if col not in non_indicator_fields]
 
-    if args.metrics:
-        metrics = [m for m in args.metrics if m in available_metrics]
-        missing = set(args.metrics) - set(metrics)
+    if metrics:
+        selected_metrics = [m for m in metrics if m in available_metrics]
+        missing = set(metrics) - set(selected_metrics)
         if missing:
             print(f"Aviso: Indicadores não encontrados: {', '.join(missing)}")
+        metrics = selected_metrics
     else:
         metrics = available_metrics
 
@@ -150,5 +143,13 @@ def main():
 
     print("Análise concluída com sucesso!")
 
+
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Analisa indicadores turísticos.")
+    parser.add_argument(
+        "--metrics",
+        nargs="*",
+        help="Lista de indicadores a analisar (padrão: todos)",
+    )
+    args = parser.parse_args()
+    main(metrics=args.metrics)

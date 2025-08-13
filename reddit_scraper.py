@@ -151,8 +151,7 @@ def init_reddit_client():
 
 
 # ————— Fluxo principal —————
-def main():
-    args = parse_args()
+def main(post_limit=50, comment_limit=20, output=DATA_PROCESSED / "comments.csv"):
     reddit = init_reddit_client()
 
     # Listas fixas de hobbies e termos depreciativos
@@ -185,17 +184,18 @@ def main():
                 reddit,
                 hobby,
                 insult,
-                posts_limit=args.post_limit,
-                comments_limit=args.comment_limit,
+                posts_limit=post_limit,
+                comments_limit=comment_limit,
             )
-            write_comments_csv(args.output, fieldnames, rows, first_write=first)
+            write_comments_csv(output, fieldnames, rows, first_write=first)
             first = False  # header apenas na primeira escrita
         except Exception as e:
             logging.warning(f"Erro em {hobby}|{insult}: {e}")
         time.sleep(1)  # throttle entre pares
 
-    logging.info(f"✅ Concluído! Veja {args.output}")
+    logging.info(f"✅ Concluído! Veja {output}")
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(post_limit=args.post_limit, comment_limit=args.comment_limit, output=args.output)
