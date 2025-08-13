@@ -3,36 +3,33 @@ from pathlib import Path
 from config import DATA_RAW, DATA_PROCESSED
 
 
-def process_file(file_path, output_dir, max_lines=None):
+HEADER = [
+    "TicketID",
+    "UniqueCarrier",
+    "YearQuarter",
+    "CouponNum",
+    "SequenceNum",
+    "Origin",
+    "OriginWAC",
+    "Roundtrip",
+    "FareClass",
+    "SegmentNum",
+    "MarketingCarrier",
+    "OperatingCarrier",
+    "Distance",
+    "ArrivalAirport",
+    "FareAmount",
+]
+
+
+def process_file(file_path, writer, max_lines=None):
     filename = Path(file_path).name
     quarter_code = filename.split(".")[2]  # e.g., '202206'
     yearquarter = quarter_code
-
-    output_path = Path(output_dir) / f"filtered_las_q2_{yearquarter[:4]}.csv"
     written = 0
+    rows = []
 
-    header = [
-        "TicketID",
-        "UniqueCarrier",
-        "YearQuarter",
-        "CouponNum",
-        "SequenceNum",
-        "Origin",
-        "OriginWAC",
-        "Roundtrip",
-        "FareClass",
-        "SegmentNum",
-        "MarketingCarrier",
-        "OperatingCarrier",
-        "Distance",
-        "ArrivalAirport",
-        "FareAmount",
-    ]
-
-    with open(file_path, "r") as infile, open(output_path, "w", newline="") as outfile:
-        writer = csv.writer(outfile)
-        writer.writerow(header)
-
+    with open(file_path, "r") as infile:
         for i, line in enumerate(infile):
             if max_lines and i >= max_lines:
                 break
@@ -73,7 +70,7 @@ def process_file(file_path, output_dir, max_lines=None):
                 except ValueError:
                     distance = fare = None
 
-                writer.writerow(
+                rows.append(
                     [
                         ticket_id,
                         unique_carrier,
@@ -94,19 +91,32 @@ def process_file(file_path, output_dir, max_lines=None):
                 )
                 written += 1
 
-    print(f"✅ {output_path.name}: {written} LAS-arrival segments exported.")
+    writer.writerows(rows)
+    print(f"✅ {file_path.name}: {written} LAS-arrival segments appended.")
 
 
 def process_all_files(folder_path=DATA_RAW, max_lines=None):
     path = Path(folder_path)
     files = sorted(path.glob("db1b.public.*.asc"))
 
+    if not files:
+        print("No files found.")
+        return
+
     output_dir = Path(DATA_PROCESSED)
     output_dir.mkdir(exist_ok=True)
 
-    for file in files:
-        print(f"🔍 Processing: {file.name}")
-        process_file(file, output_dir, max_lines=max_lines)
+    first_year = Path(files[0]).name.split(".")[2][:4]
+    output_path = output_dir / f"filtered_las_q2_{first_year}.csv"
+
+    with open(output_path, "w", newline="") as outfile:
+        writer = csv.writer(outfile)
+        writer.writerow(HEADER)
+        for file in files:
+            print(f"🔍 Processing: {file.name}")
+            process_file(file, writer, max_lines=max_lines)
+
+    print(f"✅ {output_path.name}: output written.")
 
 def main():
     process_all_files(".", max_lines=100000)  # or max_lines=100000 for testing
