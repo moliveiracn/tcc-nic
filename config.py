@@ -33,3 +33,57 @@ GRAPH_OUTPUT: Path = ROOT / "output" / "graphs"
 # parents=True  -> cria diretórios pais se necessário (ex: /output/ se não existir).
 DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
 GRAPH_OUTPUT.mkdir(parents=True, exist_ok=True)
+
+# --- Termos para busca em comentários ---
+# Entradas em minúsculas e sem duplicados para garantir comparações case-insensitive.
+FEMALE_TERMS = [
+    r"honkai:? star rail",
+    "hsr",
+    "infinity nikki",
+    "genshin",
+    "genshin impact",
+    "wuwa",
+    "wuthering waves",
+    "love and deepspace",
+    "lady gaga",
+    "bts",
+    "taylor swift",
+    "ariana grande",
+    "beyonce",
+    "kpop",
+]
+
+MALE_TERMS = [
+    "football",
+    "weightlifting",
+    "car tuning",
+    "woodworking",
+    "fishing",
+    "gaming",
+    "hunting",
+    "golf",
+]
+
+DEMEAN_TERMS = [
+    "basic",
+    "cringe",
+    "silly",
+    "childish",
+    "stupid",
+    "dumb",
+    "pointless",
+    "useless",
+    "waste of time",
+    "not a real hobby",
+    "fangirl",
+    "bimbo",
+    "shallow",
+    "lame",
+    "pathetic",
+    "try-hard",
+    "normie",
+    "soy",
+    "delusional",
+    "manchild",
+]
+
