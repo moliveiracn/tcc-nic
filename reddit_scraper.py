@@ -55,10 +55,9 @@ def enrich_row(row):
 
 
 # ————— Correspondência de termos —————
-def match_terms(text: str, hobby_pattern: str, insult_pattern: str) -> bool:
+def match_terms(text: str, hobby_regex: re.Pattern, insult_regex: re.Pattern) -> bool:
     """Retorna True se texto contiver ambos os padrões."""
-    lowered = text.lower()
-    return re.search(hobby_pattern, lowered) and re.search(insult_pattern, lowered)
+    return hobby_regex.search(text) and insult_regex.search(text)
 
 
 # ————— Busca de comentários —————
@@ -80,11 +79,15 @@ def fetch_comments_for_pair(
     submissions = reddit.subreddit("all").search(
         query, limit=posts_limit, syntax="lucene"
     )
+
+    hobby_regex = re.compile(hobby, re.IGNORECASE)
+    insult_regex = re.compile(insult, re.IGNORECASE)
+
     for sub in submissions:
         sub.comments.replace_more(limit=0)
         count = 0
         for c in sub.comments.list():
-            if match_terms(c.body, hobby, insult):
+            if match_terms(c.body, hobby_regex, insult_regex):
                 row = {
                     "pair": f"{hobby}|{insult}",
                     "post_id": sub.id,
