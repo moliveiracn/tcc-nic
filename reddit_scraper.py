@@ -153,8 +153,7 @@ def init_reddit_client():
     return praw.Reddit(client_id=cid, client_secret=cs, user_agent=ua)
 
 
-# ————— Fluxo principal —————
-def main(post_limit=50, comment_limit=20, output=DATA_PROCESSED / "comments.csv"):
+def get_reddit_raw_data(post_limit=50, comment_limit=20):
     reddit = init_reddit_client()
 
     # Listas fixas de hobbies e termos depreciativos
@@ -163,23 +162,7 @@ def main(post_limit=50, comment_limit=20, output=DATA_PROCESSED / "comments.csv"
     demean = DEMEAN_TERMS
     pairs = [(h, d) for h in (female + male) for d in demean]
 
-    # Campos do CSV (incluindo colunas adicionadas pelo enrich_row)
-    fieldnames = [
-        "pair",
-        "post_id",
-        "comment_id",
-        "subreddit",
-        "author",
-        "score",
-        "created_utc",
-        "body",
-        "word_count",
-        "char_count",
-        "hashtags",
-        "mentions",
-    ]
-
-    first = True
+    all_comments = []
     for hobby, insult in pairs:
         logging.info(f"🔎 Buscando comentários para: {hobby} + {insult}")
         try:
@@ -190,15 +173,19 @@ def main(post_limit=50, comment_limit=20, output=DATA_PROCESSED / "comments.csv"
                 posts_limit=post_limit,
                 comments_limit=comment_limit,
             )
-            write_comments_csv(output, fieldnames, rows, first_write=first)
-            first = False  # header apenas na primeira escrita
+            all_comments.extend(rows)
         except Exception as e:
             logging.warning(f"Erro em {hobby}|{insult}: {e}")
         time.sleep(1)  # throttle entre pares
 
-    logging.info(f"✅ Concluído! Veja {output}")
+    logging.info(f"✅ Coleta de dados do Reddit concluída!")
+    return all_comments
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    main(post_limit=args.post_limit, comment_limit=args.comment_limit, output=args.output)
+    # Exemplo de uso para teste, se necessário
+    raw_data = get_reddit_raw_data(post_limit=10, comment_limit=5)
+    df = pd.DataFrame(raw_data)
+    csv_path = DATA_PROCESSED / "comments_raw_test.csv"
+    df.to_csv(csv_path, index=False, encoding="utf-8")
+    print(f"Dados brutos do Reddit salvos para teste em: {csv_path}")

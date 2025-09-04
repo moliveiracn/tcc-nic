@@ -95,31 +95,30 @@ def process_file(file_path, writer, max_lines=None):
     print(f"✅ {file_path.name}: {written} LAS-arrival segments appended.")
 
 
-def process_all_files(folder_path=DATA_RAW, max_lines=None):
+def get_flight_raw_data(folder_path=DATA_RAW, max_lines=None):
     path = Path(folder_path)
     files = sorted(path.glob("db1b.public.*.asc"))
 
     if not files:
         print("No files found.")
-        return
+        return []
 
+    all_rows = []
+    for file in files:
+        print(f"🔍 Processing: {file.name}")
+        all_rows.extend(process_file(file, max_lines=max_lines))
+
+    return all_rows
+
+
+if __name__ == "__main__":
+    # Exemplo de uso para teste, se necessário
+    raw_data = get_flight_raw_data(".", max_lines=100000)
     output_dir = Path(DATA_PROCESSED)
     output_dir.mkdir(exist_ok=True)
-
-    first_year = Path(files[0]).name.split(".")[2][:4]
-    output_path = output_dir / f"filtered_las_q2_{first_year}.csv"
-
+    output_path = output_dir / "filtered_las_raw_test.csv"
     with open(output_path, "w", newline="") as outfile:
         writer = csv.writer(outfile)
         writer.writerow(HEADER)
-        for file in files:
-            print(f"🔍 Processing: {file.name}")
-            process_file(file, writer, max_lines=max_lines)
-
-    print(f"✅ {output_path.name}: output written.")
-
-def main():
-    process_all_files(".", max_lines=100000)  # or max_lines=100000 for testing
-
-if __name__ == "__main__":
-    main()
+        writer.writerows(raw_data)
+    print(f"Dados brutos de voos salvos para teste em: {output_path}")

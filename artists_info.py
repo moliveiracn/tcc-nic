@@ -190,8 +190,7 @@ def buscar_certificacoes_riaa(artista_nome):
         return None
 
 
-# ========== Execução Principal ==========
-def main():
+def get_artist_raw_data():
     artistas = ["BTS", "BLACKPINK", "Lady Gaga"]
     access_token = init_spotify_client()
     dados_artistas = []
@@ -228,10 +227,12 @@ def main():
             dados_artistas.append(dados)
         except Exception as e:
             print(f"Erro com artista {nome}: {e}")
-
-    df = pd.DataFrame(dados_artistas)
-    csv_path = DATA_PROCESSED / "dados_artistas.csv"
-    df.to_csv(csv_path, index=False, sep=";")
+    return dados_artistas
 
 if __name__ == "__main__":
-    main()
+    # Exemplo de uso para teste, se necessário
+    raw_data = get_artist_raw_data()
+    df = pd.DataFrame(raw_data)
+    csv_path = DATA_PROCESSED / "dados_artistas_raw_test.csv"
+    df.to_csv(csv_path, index=False, sep=";")
+    print(f"Dados brutos de artistas salvos para teste em: {csv_path}")

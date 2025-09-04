@@ -13,18 +13,18 @@ Analisar como atividades consideradas "fúteis" por normas patriarcais — como 
 tcc-nic-main/
 │
 ├── config.py               # Caminhos padrão (input/output)
-├── analyze_excel.py        # Análise de dados de planilhas (ocupação hoteleira etc)
-├── artists_info.py         # Dados e estatísticas de artistas como BTS
-├── flights_parser.py       # Parser de dados de voos
-├── reddit_scraper.py       # Coleta comentários e dados temáticos do Reddit
+├── analyze_processed_data.py # Análise de dados de planilhas (ocupação hoteleira etc)
+├── artists_info.py         # Coleta dados brutos de artistas (Spotify, Last.fm, etc.)
+├── flights_parser.py       # Coleta dados brutos de voos
+├── preprocess_data.py      # Orquestra a coleta, processamento e salvamento de todos os dados
+├── reddit_scraper.py       # Coleta dados brutos de comentários do Reddit
 ├── README.md               # Este arquivo
 ├── data/
 │   ├── raw/                # Dados brutos (ex: Excel, CSVs, asc)
-│   └── processed/          # Dados limpos/tratados
+│   └── processed/          # Dados limpos/tratados   
 └── output/
     └── graphs/             # Gráficos gerados automaticamente
 ```
-
 ---
 
 ## 🧰 Requisitos
@@ -77,16 +77,7 @@ O script `run.py` orquestra os diferentes componentes do projeto. Use a opção
 `--module` para escolher qual parte executar:
 
 ```bash
-# Coleta informações de artistas (Spotify/Last.fm)
-python run.py --module artists
-
-# Processa dados brutos de voos com destino a Las Vegas
-python run.py --module flights
-
-# Busca comentários no Reddit (aceita parâmetros extras)
-python run.py --module reddit --post-limit 50 --comment-limit 20 --output comments.csv
-
-# Padroniza dados de turismo antes da análise
+# Coleta, processa e salva todos os dados brutos (artistas, voos, reddit, excel)
 python run.py --module preprocess
 
 # Gera gráficos e estatísticas a partir dos dados processados
@@ -95,9 +86,6 @@ python run.py --module excel --metrics "Visitors" "Average Room Rate"
 
 Argumentos úteis:
 
-- `reddit`: `--post-limit` controla quantos posts buscar por par de termos, e
-  `--comment-limit` quantos comentários capturar por post (opcionalmente,
-  `--output` define o arquivo CSV de saída).
 - `excel`: `--metrics` recebe uma lista de indicadores específicos para analisar
   (por padrão, todos são utilizados).
 

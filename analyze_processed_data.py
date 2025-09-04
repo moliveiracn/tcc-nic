@@ -1,5 +1,5 @@
 """
-analyze_excel.py (Refatorado)
+analyze_processed_data.py (Refatorado)
 
 Este script analisa os dados de turismo em Las Vegas, já pré-processados,
 para identificar o impacto dos shows do BTS em abril de 2022.
@@ -22,6 +22,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from config import DATA_PROCESSED, GRAPH_OUTPUT
+from utils import time_function, profile_function
 
 # --- Constantes de Análise ---
 PROCESSED_DATA_FILE = DATA_PROCESSED / "vegas_tourism_yearly.csv"
@@ -115,6 +116,7 @@ def comparative_analysis(df: pd.DataFrame, metrics: list[str]):
         print(f"  - Impacto vs. outros Abrils: {diff_vs_other_aprils:+.2f}%")
     print("=" * 60 + "\n")
 
+@profile_function
 def main(metrics=None):
     """Orquestra a análise e geração de gráficos."""
     sns.set(style="whitegrid", palette="viridis")
