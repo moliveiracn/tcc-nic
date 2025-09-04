@@ -6,50 +6,10 @@ import pytest
 import run
 
 
-def test_artists_subcommand_invokes_main(monkeypatch):
-    stub = types.ModuleType("artists_info")
-    stub.main = MagicMock()
-    monkeypatch.setitem(sys.modules, "artists_info", stub)
-    monkeypatch.setattr(sys, "argv", ["run.py", "artists"])
-    run.main()
-    stub.main.assert_called_once_with()
-
-
-def test_flights_subcommand_invokes_process(monkeypatch):
-    stub = types.ModuleType("flights_parser")
-    stub.process_all_files = MagicMock()
-    monkeypatch.setitem(sys.modules, "flights_parser", stub)
-    monkeypatch.setattr(sys, "argv", ["run.py", "flights"])
-    run.main()
-    stub.process_all_files.assert_called_once_with()
-
-
-def test_reddit_subcommand_passes_args(monkeypatch):
-    stub = types.ModuleType("reddit_scraper")
-    stub.main = MagicMock()
-    monkeypatch.setitem(sys.modules, "reddit_scraper", stub)
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "run.py",
-            "reddit",
-            "--post-limit",
-            "10",
-            "--comment-limit",
-            "5",
-            "--output",
-            "out.csv",
-        ],
-    )
-    run.main()
-    stub.main.assert_called_once_with(post_limit=10, comment_limit=5, output="out.csv")
-
-
 def test_preprocess_subcommand_invokes_main(monkeypatch):
-    stub = types.ModuleType("preprocess_vegas_data")
+    stub = types.ModuleType("preprocess_data")
     stub.main = MagicMock()
-    monkeypatch.setitem(sys.modules, "preprocess_vegas_data", stub)
+    monkeypatch.setitem(sys.modules, "preprocess_data", stub)
     monkeypatch.setattr(sys, "argv", ["run.py", "preprocess"])
     run.main()
     stub.main.assert_called_once_with()

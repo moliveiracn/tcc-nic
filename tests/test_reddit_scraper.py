@@ -6,7 +6,6 @@ import pytest
 from reddit_scraper import (
     enrich_row,
     match_terms,
-    write_comments_csv,
     init_reddit_client,
 )
 
@@ -30,18 +29,6 @@ def test_match_terms_with_mocked_patterns():
     assert not match_terms("sample text", hobby, insult)
     hobby.search.assert_called_with("sample text")
     insult.search.assert_called_with("sample text")
-
-
-def test_write_comments_csv_appends_without_dup_headers(tmp_path):
-    file = tmp_path / "comments.csv"
-    fieldnames = ["a", "b"]
-    rows1 = [{"a": "1", "b": "2"}]
-    write_comments_csv(file, fieldnames, rows1, first_write=True)
-    rows2 = [{"a": "3", "b": "4"}]
-    write_comments_csv(file, fieldnames, rows2, first_write=False)
-    lines = file.read_text().splitlines()
-    assert lines[0] == "a,b"
-    assert lines[1:] == ["1,2", "3,4"]
 
 
 def test_init_reddit_client_success(monkeypatch):

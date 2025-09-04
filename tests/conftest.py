@@ -1,4 +1,5 @@
-import os
-import sys
+"""
+Pytest configuration file.
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+This file can be used to define project-wide fixtures and hooks for tests.
+"""
