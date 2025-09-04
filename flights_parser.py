@@ -22,11 +22,10 @@ HEADER = [
 ]
 
 
-def process_file(file_path, writer, max_lines=None):
+def process_file(file_path, max_lines=None):
     filename = Path(file_path).name
     quarter_code = filename.split(".")[2]  # e.g., '202206'
     yearquarter = quarter_code
-    written = 0
     rows = []
 
     with open(file_path, "r") as infile:
@@ -89,10 +88,9 @@ def process_file(file_path, writer, max_lines=None):
                         fare,
                     ]
                 )
-                written += 1
 
-    writer.writerows(rows)
-    print(f"✅ {file_path.name}: {written} LAS-arrival segments appended.")
+    print(f"✅ {Path(file_path).name}: {len(rows)} LAS-arrival segments found.")
+    return rows
 
 
 def get_flight_raw_data(folder_path=DATA_RAW, max_lines=None):
@@ -106,7 +104,7 @@ def get_flight_raw_data(folder_path=DATA_RAW, max_lines=None):
     all_rows = []
     for file in files:
         print(f"🔍 Processing: {file.name}")
-        all_rows.extend(process_file(file, max_lines=max_lines))
+        all_rows.extend(process_file(file, max_lines))
 
     return all_rows
 

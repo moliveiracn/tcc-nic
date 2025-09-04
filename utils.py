@@ -3,6 +3,7 @@ import functools
 import cProfile
 import pstats
 import io
+import os
 
 def time_function(func):
     """
@@ -35,6 +36,8 @@ def profile_function(func):
         ps.print_stats()
         
         report_path = f"performance_reports/{func.__name__}_profile.txt"
+        os.makedirs(os.path.dirname(report_path), exist_ok=True)
+
         with open(report_path, "w") as f:
             f.write(s.getvalue())
             

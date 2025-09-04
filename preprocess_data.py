@@ -30,8 +30,8 @@ LINHA_DATAS = 6
 COLUNAS_DATAS = list(range(1, 25, 2))
 COLUNA_NOMES_METRICAS = 0
 ABA_EXCEL = "Las Vegas "  # Assumindo que o nome da aba é consistente
-# Palavras que indicam o início de um rodapé e, portanto, o fim das métricas
-FOOTER_KEYWORDS = [FOOTER_KEYWORDS = [FOOTER_KEYWORDS = ["source", "nota", "notes"]]]
+# Palavras-chave que indicam o início de um rodapé e, portanto, o fim das métricas
+FOOTER_KEYWORDS = ["source", "nota", "notes"]
 
 
 def detect_metric_bounds(df: pd.DataFrame) -> tuple[int, int]:
